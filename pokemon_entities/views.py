@@ -1,6 +1,8 @@
 import folium
 import json
 
+from django.utils import timezone
+from .models import Pokemon, PokemonEntity
 from django.http import HttpResponseNotFound
 from django.shortcuts import render
 
@@ -11,6 +13,9 @@ DEFAULT_IMAGE_URL = (
     '/latest/fixed-aspect-ratio-down/width/240/height/240?cb=20130525215832'
     '&fill=transparent'
 )
+
+def get_pokemon_image(request, image):
+    return request.build_absolute_uri(image.url) if image else DEFAULT_IMAGE_URL
 
 
 def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
@@ -27,24 +32,29 @@ def add_pokemon(folium_map, lat, lon, image_url=DEFAULT_IMAGE_URL):
 
 
 def show_all_pokemons(request):
-    with open('pokemon_entities/pokemons.json', encoding='utf-8') as database:
-        pokemons = json.load(database)['pokemons']
-
     folium_map = folium.Map(location=MOSCOW_CENTER, zoom_start=12)
-    for pokemon in pokemons:
-        for pokemon_entity in pokemon['entities']:
-            add_pokemon(
-                folium_map, pokemon_entity['lat'],
-                pokemon_entity['lon'],
-                pokemon['img_url']
-            )
+    timezone_now = timezone.now()
+    pokemons = Pokemon.objects.all()
+    pokemon_entities = PokemonEntity.objects.filter(
+        appeared_at=timezone_now,
+        disappeared_at=timezone_now
+    )
+    for pokemon_entity in pokemon_entities:
+        image_url = get_pokemon_image(request, pokemon_entity.pokemon.image)
+        add_pokemon(
+            folium_map, 
+            pokemon_entity.lat,
+            pokemon_entity.lon,
+            image_url
+        )
 
     pokemons_on_page = []
     for pokemon in pokemons:
+        image_url = get_pokemon_image(request, pokemon.image)
         pokemons_on_page.append({
-            'pokemon_id': pokemon['pokemon_id'],
-            'img_url': pokemon['img_url'],
-            'title_ru': pokemon['title_ru'],
+            'pokemon_id': pokemon.id,
+            'img_url': image_url,
+            'title_ru': pokemon.title,
         })
 
     return render(request, 'mainpage.html', context={
