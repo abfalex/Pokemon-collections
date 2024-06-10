@@ -8,11 +8,11 @@ class Pokemon(models.Model):
     image = models.ImageField(null=True, blank=True)
     previous_evolution = models.ForeignKey(
         'Pokemon',
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         verbose_name='Предыдущая эволюция',
         null=True,
         blank=True,
-        related_name='next_evolution'
+        related_name='next_evolutions'
     )
 
     def __str__(self):
