@@ -20,6 +20,8 @@ class Pokemon(models.Model):
     
     class Meta:
         verbose_name = 'Покемон'
+        verbose_name_plural = 'Покемоны'
+        
     
 
 class PokemonEntity(models.Model):
@@ -36,3 +38,4 @@ class PokemonEntity(models.Model):
 
     class Meta:
         verbose_name = 'Детали покемона'
+        verbose_name_plural = 'Детали покемонов'
